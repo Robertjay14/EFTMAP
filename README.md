@@ -1,6 +1,7 @@
 # EFT Interactive Online Map
 ----
 ## [Click here to use Live Map](https://effintoast.github.io/Escape-From-Tarkov-Interactive-Online-Map/)
+Updates were just hacked together to use with friends in discord, there may be issues.
 
 ## Updates
 
