@@ -1,12 +1,17 @@
+
+
+
 $(function() {
 
   let config = {
-    apiKey: "AIzaSyBr3UJb7Cq7e-N_VQLFSB0EM2jezV0OEeY",
-    authDomain: "https://tarkov-interactive-map-9feef.firebaseapp.com",
-    databaseURL: "https://tarkov-interactive-map-9feef.firebaseio.com",
-    projectId: "tarkov-interactive-map-9feef",
-    storageBucket: "",
-    messagingSenderId: "341245900529",
+    apiKey: "AIzaSyChHkiVl0F8buT1ftMiDCoHezgvGlN98j8",
+    authDomain: "tarkovinteractivemap-dc6b7.firebaseapp.com",
+    projectId: "tarkovinteractivemap-dc6b7",
+    storageBucket: "tarkovinteractivemap-dc6b7.appspot.com",
+    databaseURL: "https://tarkovinteractivemap-dc6b7-default-rtdb.firebaseio.com",
+    messagingSenderId: "885133456347",
+    appId: "1:885133456347:web:9a5bca2b4ad14ac36e2dfe",
+    measurementId: "G-M3N6FTZ7N2"
   };
 
     firebase.initializeApp(config);
@@ -25,9 +30,28 @@ $(function() {
 
     let now = Date.now();
 
+    fabric.Canvas.prototype.getItemByAttr = function(attr, name) {
+        var object = null,
+        objects = this.getObjects();
+        console.log(objects);
+        for (var i = 0, len = this.size(); i < len; i++) {
+            if (objects[i][attr] && objects[i][attr] === name) {
+                object = objects[i];
+                break;
+            }
+        }
+        console.log(object);
+        return object;
+    };
+
+    let toJSONExtra = function(data) {
+        return data.toJSON(['id','lockScalingY', 'lockScalingX', 'lockMovementY', 'lockMovementX']);
+    };
+    
     let canvas = new fabric.Canvas('canvas', {
         isDrawingMode: true
     });
+    
 
     canvas.selection = false;
 
@@ -110,6 +134,7 @@ $(function() {
                 originY: 'top',
                 width: pointer.x - origX,
                 height: pointer.y - origY,
+                id: Date.now(),
                 rx: 0,
                 ry: 0,
                 transparentCorners: true,
@@ -207,6 +232,7 @@ $(function() {
                 strokeWidth: parseInt(drawingLineWidth.val()),
                 fill: drawingColor.val(),
                 stroke: drawingColor.val(),
+                id: Date.now(),
                 originX: 'center',
                 originY: 'center',
                 hasBorders: false,
@@ -241,14 +267,97 @@ $(function() {
         return Arrow;
     }());
 
+
+    var TextEdit = (function() {
+        function TextEdit(canvas) {
+            this.canvas = canvas;
+            this.className = 'TextEdit';
+            this.isDrawing = false;
+            this.isActive = false;
+            this.bindEvents();
+        }
+
+        TextEdit.prototype.bindEvents = function() {
+            let inst = this;
+            inst.canvas.on('mouse:down', function(o) {
+                if (inst.isActive) inst.onMouseDown(o);
+            });
+            inst.canvas.on('mouse:up', function(o) {
+                if (inst.isActive) inst.onMouseUp(o);
+            });
+            inst.canvas.on('object:moving', function(o) {
+                if (inst.isActive) inst.disable();
+            })
+        };
+
+        TextEdit.prototype.onMouseUp = function(o) {
+            let inst = this;
+            inst.disable();
+        };
+
+        TextEdit.prototype.onMouseDown = function(o) {
+            let inst = this;
+            inst.enable();
+            let pointer = inst.canvas.getPointer(o.e);
+
+            if(o.target == null){
+                var t = new fabric.Textbox("",{
+                    top: pointer.y,
+                    left: pointer.x,
+                    id: Date.now(),
+                    fontSize: 15,
+                    fontWeight: 500,
+                    fontFamily: 'Impact, Haettenschweiler, "Franklin Gothic Bold"',
+                    width:200,
+                    charSpacing: 90,
+                    stroke:'#000000',
+                    strokeWidth: .75,
+                    fill:drawingColor.val()
+                  });
+                  inst.canvas.add(t).setActiveObject(t);
+                t.enterEditing();  
+            }
+
+        };
+
+        TextEdit.prototype.isEnable = function() {
+            return this.isDrawing;
+        };
+
+        TextEdit.prototype.enable = function() {
+            this.isDrawing = true;
+        };
+
+        TextEdit.prototype.disable = function() {
+            this.isDrawing = false;
+        };
+
+        TextEdit.prototype.active = function () {
+            this.isActive = true;
+        };
+
+        TextEdit.prototype.desactive = function () {
+            this.isActive = false;
+        };
+
+        return TextEdit;
+    }());
+
+
     let c = new Circle(canvas),
         a = new Arrow(canvas);
+        t = new TextEdit(canvas);
+
+    let currentSelectedObject = 0;
 
     canvas.freeDrawingBrush.color = drawingColor.val();
     canvas.freeDrawingBrush.width = parseInt(drawingLineWidth.val(), 10) || 1;
 
     $('#clear-canvas').on('click', function () {
-        clear();
+        if(confirm('Are you SURE you want to clear the map?')){
+            clear();
+        }
+        
     });
 
     $('#background-options').on('change', function () {
@@ -275,38 +384,71 @@ $(function() {
         drawingColor.val(value);
     });
 
-    $("#line-drawing").on('click', function () {
-        canvas.isDrawingMode = true;
+
+    function deactiveAllTools(){
+        canvas.isDrawingMode = false;
         c.desactive();
         a.desactive();
+        t.desactive();
+    }
+
+    $("#line-drawing").on('click', function () {
+        $('.tool-option.active').removeClass('active');
+        $(this).addClass('active');
+        deactiveAllTools();
+        canvas.isDrawingMode = true;
+    });
+
+    $('#text-drawing').on('click', function(){
+        $('.tool-option.active').removeClass('active');
+        $(this).addClass('active');
+        deactiveAllTools();
+        t.active();
+ 
+    });
+
+    $('#single-delete').on('click', function(){
+        $('.tool-option.active').removeClass('active');
+        $(this).addClass('active');
+        deactiveAllTools();
+        canvas.discardActiveObject().renderAll();
     });
 
     $("#circle-drawing").on('click', function () {
-        canvas.isDrawingMode = false;
+        $('.tool-option.active').removeClass('active');
+        $(this).addClass('active');
+        deactiveAllTools();
         c.active();
-        a.desactive();
     });
 
     $("#arrow-drawing").on('click', function () {
-        canvas.isDrawingMode = false;
+        $('.tool-option.active').removeClass('active');
+        $(this).addClass('active');
+        deactiveAllTools();
         a.active();
-        c.desactive();
     });
 
+
     function setBackground(backgroundImage) {
+        
         if (backgroundImage === "none") {
             canvas.backgroundImage = 0;
-            canvas.setBackgroundColor({source: 'img/none.png'}, function () {
+            canvas.setBackgroundColor({source: 'img/none.png?rev1'}, function () {
                 canvas.renderAll();
             });
         } else {
             fabric.Image.fromURL('img/' + backgroundImage + '.png', function (img) {
                 canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas), {
                     scaleX: canvas.width / img.width,
-                    scaleY: canvas.height / img.height
+                    scaleY: canvas.height / img.height,
+                    left: 0,
+                    top: 0,
+                    originX: 'left',
+                    originY: 'top'
                 });
             });
         }
+       
     }
 
     function clear() {
@@ -315,8 +457,6 @@ $(function() {
     }
 
 
-    $().on('keydown', null, 'F2', clear);
-
     currentRoom.child('content').once('value', function (data) {
 
         let sync = new Sync();
@@ -324,7 +464,6 @@ $(function() {
         currentRoom.child('map').on('value', function (map) {
             let value = map.val();
             let select = $('#background-options');
-
             if (select.val() !== value) {
                 select.val(value);
                 setBackground(value);
@@ -333,37 +472,120 @@ $(function() {
 
         let queueRef = currentRoom.child('queue');
 
-        canvas.on('path:created', function(data) {
+        function removeObject(){
+            if(currentSelectedObject.id){
+                canvas.remove(canvas.getItemByAttr('id', currentSelectedObject.id));
+                currentRoom.update({
+                    content: toJSONExtra(canvas)
+                });
+                queueRef.push().set({
+                    event: "removeObject:"+currentSelectedObject.id,
+                    by: uID,
+                    time: Date.now().toString()
+                });
+            }
+            
+        }
 
+        $(document).on('keydown', function(event){
+            const key = event.key; // const {key} = event; ES6+c
+            if (key === "Delete") {
+                removeObject();
+            }
+        });
+
+        canvas.on('path:created', function(data) {
             if (sync.status) {
                 return;
             }
 
-            data.path.set({
+           data.path.set({
                 lockMovementX: true,
-                lockMovementY: true
+                lockMovementY: true,
+                lockScalingX: true,
+                lockScalingY: true,
+                id: Date.now()
             });
-
+            console.log(toJSONExtra(canvas));
             currentRoom.update({
-                content: JSON.stringify(canvas)
+                content: toJSONExtra(canvas)
             });
 
             queueRef.push().set({
-                event: JSON.stringify(data.path),
+                event: JSON.stringify(toJSONExtra(data.path)),
                 by: uID,
                 time: Date.now().toString()
             });
 
         });
 
-        canvas.on('object:finish', function(data) {
+        canvas.on('object:added', function(data) {
+            if (sync.status) {
+                return;
+            }
+            if(data.target.type == "textbox"){
+                currentRoom.update({
+                    content: toJSONExtra(canvas)
+                });
+    
+                queueRef.push().set({
+                    event: JSON.stringify(toJSONExtra(data.target)),
+                    by: uID,
+                    time: Date.now().toString()
+                });
+            }
+            
 
+        });
+
+         
+        canvas.on('object:modified', function(data) {
+            if (sync.status) {
+                return;
+            }
+            console.log(data);
+            if(data.target.type == "textbox"){
+                currentRoom.update({
+                    content: toJSONExtra(canvas)
+                });
+    
+                queueRef.push().set({
+                    event: JSON.stringify(toJSONExtra(data.target)),
+                    by: uID,
+                    time: Date.now().toString()
+                });
+            }
+            
+        });
+
+
+        canvas.on('text:changed', function(data) {
             if (sync.status) {
                 return;
             }
 
             currentRoom.update({
-                content: JSON.stringify(canvas)
+                content: toJSONExtra(canvas)
+            });
+
+            queueRef.push().set({
+                event: JSON.stringify(toJSONExtra(data.target)),
+                by: uID,
+                time: Date.now().toString()
+            });
+
+        });
+
+
+
+
+        canvas.on('object:finish', function(data) {
+            if (sync.status) {
+                return;
+            }
+            
+            currentRoom.update({
+                content: toJSONExtra(canvas)
             });
 
             queueRef.push().set({
@@ -373,16 +595,25 @@ $(function() {
             });
 
         });
+        
 
         canvas.on('object:added', function (data) {
             if (sync.status) {
                 return;
             }
 
-            data.target.set({
-                lockMovementX: true,
-                lockMovementY: true
-            })
+            if(data.target.type != "textbox"){
+                data.target.set({
+                    lockMovementX: true,
+                    lockMovementY: true,
+                    lockScalingX: true,
+                    lockScalingY: true
+                })
+            }
+        });
+
+        canvas.on('mouse:down', function(o){
+            currentSelectedObject = o.target;
         });
 
         canvas.on('canvas:cleared', function () {
@@ -390,9 +621,8 @@ $(function() {
             if (sync.status) {
                 return;
             }
-
             currentRoom.update({
-                content: JSON.stringify(canvas)
+                content: toJSONExtra(canvas)
             });
 
             queueRef.push().set({
@@ -416,12 +646,38 @@ $(function() {
 
             sync.on();
 
-            if (value.event === "clear") {
+            if (value.event == "clear") {
                 clear();
-            } else {
+            } 
+            else if(value.event == "refresh"){
+   
+                currentRoom.child('content').once('value', function (content) {
+                    let val = content.val();
+                    sync.on();
+                    delete val.backgroundImage;
+                    canvas.loadFromJSON(JSON.parse(val));
+                    sync.off();
+                    
+                });
+                
+            }
+            else if(value.event.startsWith("removeObject:")){
+                value.event = value.event.replace('removeObject:', '');
+                console.log(value.event);
+                value.event = parseInt(value.event);
+                canvas.remove(canvas.getItemByAttr('id', value.event));
+            }
+            else {
                 let newObj = JSON.parse(value.event);
+                if(newObj.id){
+                    console.log(newObj.id);
+                    canvas.remove(canvas.getItemByAttr('id', newObj.id));
+                }
                 new fabric[fabric.util.string.capitalize(newObj.type)].fromObject(newObj, function (obj) {
                     canvas.add(obj);
+                });
+                currentRoom.child('content').once('value', function (content) {
+                    let val = content.val();
                 });
             }
 
@@ -431,7 +687,7 @@ $(function() {
         let val = data.val();
 
         if (val === null) {
-            val = JSON.stringify(canvas);
+            val = toJSONExtra(canvas);
 
             rooms.child(roomID).set({
                 content: val,
@@ -441,12 +697,15 @@ $(function() {
         }
 
         sync.on();
-
-        canvas.loadFromJSON(JSON.parse(val));
+        console.log(val);
+        delete val.backgroundImage;
+        canvas.loadFromJSON(val);
+        
         currentRoom.child('map').once('value', function (content) {
             let val = content.val();
             setBackground(val);
         });
+
 
         sync.off();
 

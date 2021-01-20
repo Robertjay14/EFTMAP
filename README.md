@@ -1,14 +1,13 @@
 # EFT Interactive Online Map
 ----
-## Live Link
-[Link](https://zibbp.github.io/Escape-From-Tarkov-Interactive-Online-Map/)
-----
-## What is this?
-This is an online map that allows users to join a room id and plan routes for a squad in EFT.
+## [Click here to use Live Map](https://effintoast.github.io/Escape-From-Tarkov-Interactive-Online-Map/)
 
-## Backend
-Drawings are sent to clients via a Firebase database which stores the drawings.
+## Updates
 
-**Have any questions?**
+* Text labels
+* Object delete 
+*(select cursor icon from tool palette , select line/object and press Delete key on your keyboard)*
+* Updated maps
 
-Open an issue or contact me on Discord *Zibbp#2560*
+## Original code/credit to Zibbp
+(https://github.com/Zibbp/Escape-From-Tarkov-Interactive-Online-Map)
