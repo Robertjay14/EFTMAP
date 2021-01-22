@@ -504,6 +504,7 @@ $(function() {
                 lockMovementY: true,
                 lockScalingX: true,
                 lockScalingY: true,
+                fill: 'transparent',
                 id: Date.now()
             });
             console.log(toJSONExtra(canvas));
