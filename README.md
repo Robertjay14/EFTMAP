@@ -6,6 +6,7 @@ Updates were just hacked together to use with friends in discord, there may be i
 ## Updates
 
 * Text labels
+*(select cursor icon to move and resize text)*
 * Object delete 
 *(select cursor icon from tool palette , select line/object and press Delete key on your keyboard)*
 * Updated maps
