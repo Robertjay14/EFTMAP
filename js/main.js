@@ -4,13 +4,13 @@
 $(function() {
 
   let config = {
-    apiKey: "AIzaSyChHkiVl0F8buT1ftMiDCoHezgvGlN98j8",
-    authDomain: "tarkovinteractivemap-dc6b7.firebaseapp.com",
+    apiKey: "AIzaSyCmhx4nteEyGOnGXVwy-XMV-_TzGuF7hz8",
+    authDomain: "tarkovmapsonline.firebaseapp.com",
     projectId: "tarkovinteractivemap-dc6b7",
-    storageBucket: "tarkovinteractivemap-dc6b7.appspot.com",
+    storageBucket: "tarkovmapsonline.appspot.com",
     databaseURL: "https://tarkovinteractivemap-dc6b7-default-rtdb.firebaseio.com",
-    messagingSenderId: "885133456347",
-    appId: "1:885133456347:web:9a5bca2b4ad14ac36e2dfe",
+    messagingSenderId: "343497716364",
+    appId: "1:343497716364:web:e0af117de3076bdf8701a9"
     measurementId: "G-M3N6FTZ7N2"
   };
 
